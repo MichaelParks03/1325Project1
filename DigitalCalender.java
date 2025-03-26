@@ -81,3 +81,83 @@ public class DigitalCalender
     }
 }
 
+import java.util.*;
+
+public class DigitalCalendar {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        Map<Integer, List<Event>> calendar = new TreeMap<>();
+
+        System.out.print("Enter the month name (e.g., March): ");
+        String month = sc.nextLine();
+
+        boolean addingEvents = true;
+        while (addingEvents) {
+            System.out.print("Enter the day of the month (1-31): ");
+            int day = sc.nextInt();
+            sc.nextLine(); // Consume newline
+
+            System.out.print("Enter the event time (e.g., 10:30 AM or 14:30): ");
+            String time = sc.nextLine();
+
+            System.out.print("Enter the event description: ");
+            String description = sc.nextLine();
+
+            // Add the event to the calendar
+            Event event = new Event(time, description);
+            calendar.computeIfAbsent(day, k -> new ArrayList<>()).add(event);
+
+            // Sort events for the day
+            calendar.get(day).sort(Comparator.comparing(Event::getTime));
+
+            System.out.print("Would you like to add another event? (yes/no): ");
+            String response = sc.nextLine().toLowerCase();
+            addingEvents = response.equals("yes");
+        }
+
+        // Display the calendar
+        displayCalendar(month, calendar);
+
+        sc.close();
+    }
+
+    private static void displayCalendar(String month, Map<Integer, List<Event>> calendar) {
+        System.out.println("\n╔══════════════════════════════════════════════════════════╗");
+        System.out.printf("║ %-56s ║\n", "Digital Calendar for " + month);
+        System.out.println("╠══════════════════════════════════════════════════════════╣");
+
+        for (Map.Entry<Integer, List<Event>> entry : calendar.entrySet()) {
+            int day = entry.getKey();
+            List<Event> events = entry.getValue();
+
+            System.out.printf("║ Day %2d: %-48s ║\n", day, "");
+            System.out.println("╟──────────────────────────────────────────────────────────╢");
+
+            for (Event event : events) {
+                System.out.printf("║ %-8s │ %-45s ║\n", event.getTime(), event.getDescription());
+            }
+
+            System.out.println("╠══════════════════════════════════════════════════════════╣");
+        }
+
+        System.out.println("╚══════════════════════════════════════════════════════════╝");
+    }
+}
+
+class Event {
+    private String time;
+    private String description;
+
+    public Event(String time, String description) {
+        this.time = time;
+        this.description = description;
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+}
