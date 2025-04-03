@@ -1,5 +1,8 @@
 import java.util.*;
 
+import java.util.*;
+import java.util.InputMismatchException;
+
 public class DigitalCalendar {
 
     public static void main(String[] args) {
@@ -12,23 +15,32 @@ public class DigitalCalendar {
         System.out.println("1. Input Month\n2. Input Year\n3. Input Events (Date, Time, Description)");
         System.out.println("4. When done, confirm to generate your calendar.");
         System.out.println("-------------------------------------\n");
-
         System.out.print("Would you like to begin entering information? (Yes/No): ");
-        String beginCalendar = sc.next().toLowerCase();
-        sc.nextLine(); 
+        String beginCalendar = sc.nextLine().toLowerCase();
 
         if (!beginCalendar.equals("yes")) {
             System.out.println("Okay! Have a great day!");
             sc.close();
             return;
         }
-
         System.out.print("\nEnter the month name (e.g., March): ");
         String month = sc.nextLine();
-        System.out.print("Enter the year: ");
-        int year = sc.nextInt();
-        sc.nextLine(); 
+        int year = 0;
+        boolean valid = false;
+        while (!valid) {
+        try {
+            System.out.print("Enter the year: ");
+            year = sc.nextInt();
+            sc.nextLine();
 
+            valid = true;
+        }
+        catch (InputMismatchException e) {
+           System.out.println("That's not a valid year! please enter a valid year");
+           valid = false;
+           sc.nextLine();
+        }
+        }
         int monthDays = getDaysInMonth(month, year);
         if (monthDays == 0) {
             System.out.println("Invalid month entered. Please restart.");
@@ -37,19 +49,26 @@ public class DigitalCalendar {
         }
 
         boolean addingEvents = true;
+        int day = 0;
+
         while (addingEvents) {
-            System.out.print("\nEnter the day of the month (1-" + monthDays + "): ");
-            int day = sc.nextInt();
-            sc.nextLine(); 
-
-            if (day < 1 || day > monthDays) {
-                System.out.println("Invalid day! Please enter a valid date.");
-                continue;
+        	System.out.print("\nEnter the day of the month (1-" + monthDays + "): ");
+            boolean object = false;
+            while (!object) {
+            try {
+                day = sc.nextInt();
+                object = true;
             }
+            catch (InputMismatchException e) {
+               System.out.println("That's not a valid day! please enter a valid day");
+               sc.nextLine();
 
+               object = false;
+            }
+            }
+            sc.nextLine(); // Clear buffer from previous nextInt()
             System.out.print("Enter the event time (e.g., 10:30 AM or 14:30): ");
             String time = sc.nextLine();
-
             System.out.print("Enter the event description: ");
             String description = sc.nextLine();
 
@@ -57,12 +76,11 @@ public class DigitalCalendar {
             calendar.computeIfAbsent(day, k -> new ArrayList<>()).add(event);
 
             calendar.get(day).sort(Comparator.comparing(Event::getTime));
-
             System.out.print("Would you like to add another event? (yes/no): ");
             String response = sc.nextLine().toLowerCase();
             addingEvents = response.equals("yes");
         }
-
+ 
         displayCalendar(month, year, calendar);
         sc.close();
     }
