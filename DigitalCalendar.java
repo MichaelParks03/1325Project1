@@ -1,92 +1,85 @@
-import java.util.*;
-
-import java.util.*;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.InputMismatchException;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.TreeMap;
+import java.util.regex.Pattern;
 
-public class DigitalCalendar {
+// Main Class for the program
+public class DigitalCalendar 
+{
+    //This method handles the visual display of the calendar and events
+    private static void displayCalendar(String month, int year, Map<Integer, List<Event>> calendar) 
+    {
+        System.out.println("\n╔══════════════════════════════════════════════════════════╗");
+        System.out.printf("║ %-56s ║\n", "Digital Calendar for " + month + " " + year);
+        System.out.println("╠══════════════════════════════════════════════════════════╣");
 
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        Map<Integer, List<Event>> calendar = new TreeMap<>();
+        for (Map.Entry<Integer, List<Event>> entry : calendar.entrySet()) 
+        {
+            int day = entry.getKey();
+            List<Event> events = entry.getValue();
 
-        System.out.println("\nWelcome to your digital calendar!");
-        System.out.println("-------------------------------------");
-        System.out.println("Instructions: ");
-        System.out.println("1. Input Month\n2. Input Year\n3. Input Events (Date, Time, Description)");
-        System.out.println("4. When done, confirm to generate your calendar.");
-        System.out.println("-------------------------------------\n");
-        System.out.print("Would you like to begin entering information? (Yes/No): ");
-        String beginCalendar = sc.nextLine().toLowerCase();
+            System.out.printf("║ %s %2d: %-48s ║\n", month.substring(0,3), day, "");
+            System.out.println("╟──────────────────────────────────────────────────────────╢");
 
-        if (!beginCalendar.equals("yes")) {
-            System.out.println("Okay! Have a great day!");
-            sc.close();
-            return;
-        }
-        System.out.print("\nEnter the month name (e.g., March): ");
-        String month = sc.nextLine();
-        int year = 0;
-        boolean valid = false;
-        while (!valid) {
-        try {
-            System.out.print("Enter the year: ");
-            year = sc.nextInt();
-            sc.nextLine();
-
-            valid = true;
-        }
-        catch (InputMismatchException e) {
-           System.out.println("That's not a valid year! please enter a valid year");
-           valid = false;
-           sc.nextLine();
-        }
-        }
-        int monthDays = getDaysInMonth(month, year);
-        if (monthDays == 0) {
-            System.out.println("Invalid month entered. Please restart.");
-            sc.close();
-            return;
-        }
-
-        boolean addingEvents = true;
-        int day = 0;
-
-        while (addingEvents) {
-        	System.out.print("\nEnter the day of the month (1-" + monthDays + "): ");
-            boolean object = false;
-            while (!object) {
-            try {
-                day = sc.nextInt();
-                object = true;
+            for (Event event : events) 
+            {
+                System.out.printf("║ %-8s │ %-45s ║\n", event.getTime(), event.getDescription());
             }
-            catch (InputMismatchException e) {
-               System.out.println("That's not a valid day! please enter a valid day");
-               sc.nextLine();
 
-               object = false;
-            }
-            }
-            sc.nextLine(); // Clear buffer from previous nextInt()
-            System.out.print("Enter the event time (e.g., 10:30 AM or 14:30): ");
-            String time = sc.nextLine();
-            System.out.print("Enter the event description: ");
-            String description = sc.nextLine();
-
-            Event event = new Event(time, description);
-            calendar.computeIfAbsent(day, k -> new ArrayList<>()).add(event);
-
-            calendar.get(day).sort(Comparator.comparing(Event::getTime));
-            System.out.print("Would you like to add another event? (yes/no): ");
-            String response = sc.nextLine().toLowerCase();
-            addingEvents = response.equals("yes");
+            System.out.println("╠══════════════════════════════════════════════════════════╣");
         }
- 
-        displayCalendar(month, year, calendar);
-        sc.close();
+
+        System.out.println("╚══════════════════════════════════════════════════════════╝");
     }
 
-    private static int getDaysInMonth(String month, int year) {
-        switch (month.toLowerCase()) {
+    //This method saves the calendar to a file for re-viewing after completion of the program
+    private static void saveCalendarToFile(String month, int year, Map<Integer, List<Event>> calendar, String filename) 
+    {
+        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filename), StandardCharsets.UTF_8)))  
+        {
+            writer.println("╔══════════════════════════════════════════════════════════╗");
+            writer.printf("║ %-56s ║\n", "Digital Calendar for " + month + " " + year);
+            writer.println("╠══════════════════════════════════════════════════════════╣");
+
+            for (Map.Entry<Integer, List<Event>> entry : calendar.entrySet()) 
+            {
+                int day = entry.getKey();
+                List<Event> events = entry.getValue();
+
+                writer.printf("║ %s %2d: %-48s ║\n", month.substring(0,3), day, "");
+                writer.println("╟──────────────────────────────────────────────────────────╢");
+
+                for (Event event : events) 
+                {
+                    writer.printf("║ %-8s │ %-45s ║\n", event.getTime(), event.getDescription());
+                }
+
+                writer.println("╠══════════════════════════════════════════════════════════╣");
+            }
+
+            writer.println("╚══════════════════════════════════════════════════════════╝");
+            System.out.println("\nCalendar saved as: " + filename);
+        } 
+        catch (IOException e) 
+        {
+            System.out.println("Error saving calendar to file: " + e.getMessage());
+        }
+    }
+
+    // This method handles setting the allowed days in a chosen month as well as the exception of a leap year
+    private static int getDaysInMonth(String month, int year) 
+    {
+        switch (month.toLowerCase()) 
+        {
             case "january": return 31;
             case "february": return (isLeapYear(year)) ? 29 : 28;
             case "march": return 31;
@@ -99,52 +92,153 @@ public class DigitalCalendar {
             case "october": return 31;
             case "november": return 30;
             case "december": return 31;
-            default: return 0; 
+            default: return 0;
         }
     }
 
-    private static boolean isLeapYear(int year) {
+    // This method checks the given year to see if it is a leap year
+    private static boolean isLeapYear(int year) 
+    {
         return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
     }
 
-    private static void displayCalendar(String month, int year, Map<Integer, List<Event>> calendar) {
-        System.out.println("\n╔══════════════════════════════════════════════════════════╗");
-        System.out.printf("║ %-56s ║\n", "Digital Calendar for " + month + " " + year);
-        System.out.println("╠══════════════════════════════════════════════════════════╣");
+    // This regex pattern handles the time format character validation
+    private static final String TIME_PATTERN = "^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$";
 
-        for (Map.Entry<Integer, List<Event>> entry : calendar.entrySet()) {
-            int day = entry.getKey();
-            List<Event> events = entry.getValue();
+    // This method takes the user input time and checks if it is valid
+    private static boolean isValidTime(String time) 
+    {
+        return Pattern.matches(TIME_PATTERN, time);
+    }
 
-            System.out.printf("║ Day %2d: %-48s ║\n", day, "");
-            System.out.println("╟──────────────────────────────────────────────────────────╢");
+    // This is main where the program is ran and most of the text prompts / user inputs are held
+    public static void main(String[] args) 
+    {
+        Scanner sc = new Scanner(System.in);
+        Map<Integer, List<Event>> calendar = new TreeMap<>();
 
-            for (Event event : events) {
-                System.out.printf("║ %-8s │ %-45s ║\n", event.getTime(), event.getDescription());
-            }
+        System.out.println("\nWelcome to your digital calendar!");
+        System.out.println("───────────────────────────────────────────────────────");
+        System.out.println("Instructions: ");
+        System.out.println("───────────────────────────────────────────────────────");
+        System.out.println("1. Input Year\n2. Input Month\n3. Input Events (Date, Time, Description)");
+        System.out.println("4. Confirm if you'd like to add any more events\n5. Save calender to a file (Optional)");
+        System.out.println("───────────────────────────────────────────────────────\n");
+        System.out.print("Would you like to begin entering information? (Yes/No): ");
+        String beginCalendar = sc.nextLine().toLowerCase();
 
-            System.out.println("╠══════════════════════════════════════════════════════════╣");
+        if (!beginCalendar.equals("yes")) 
+        {
+            System.out.println("\nOkay! Have a great day!\n");
+            sc.close();
+            return;
         }
 
-        System.out.println("╚══════════════════════════════════════════════════════════╝");
-    }
-}
+        int year = 0;
+        boolean valid = false;
 
-class Event {
-    private String time;
-    private String description;
+        while (!valid) 
+        {
+            try 
+            {
+                System.out.print("\nEnter the year: ");
+                year = sc.nextInt();
+                sc.nextLine();
+                valid = true;
+            } 
+            catch (InputMismatchException e) 
+            {
+                System.out.println("That's not a valid year! Please enter a valid year.");
+                sc.nextLine();
+            }
+        }
 
-    public Event(String time, String description) {
-        this.time = time;
-        this.description = description;
-    }
+        System.out.print("\nEnter the month name (e.g., March): ");
+        String month = sc.nextLine();
+        int monthDays = getDaysInMonth(month, year);
 
-    public String getTime() {
-        return time;
-    }
+        while (monthDays == 0) 
+        {
+            System.out.println("Invalid month entered. Please enter a valid month.");
+            System.out.print("\nEnter the month name (e.g, March): ");
+            month = sc.nextLine();
+            monthDays = getDaysInMonth(month, year);
+        }
 
-    public String getDescription() {
-        return description;
+        boolean addingEvents = true;
+        while (addingEvents) 
+        {
+            int day = 0;
+            boolean validDay = false;
+
+            while (!validDay) 
+            {
+                try 
+                {
+                    System.out.print("\nEnter the day of the month (1-" + monthDays + "): ");
+                    day = sc.nextInt();
+                    sc.nextLine();
+                    if (day >= 1 && day <= monthDays) 
+                    {
+                        validDay = true;
+                    } 
+                    else 
+                    {
+                        System.out.println("Invalid day! Please enter a valid date.");
+                    }
+                } 
+                catch (InputMismatchException e) 
+                {
+                    System.out.println("That's not a valid day! Please enter a valid day.");
+                    sc.nextLine();
+                }
+            }
+
+            String time;
+            while (true) 
+            {
+                System.out.print("\nEnter the event time (12-hour format, e.g., 10:30 AM): ");
+                time = sc.nextLine().toUpperCase();
+                if (isValidTime(time)) 
+                {
+                    break;
+                } 
+                else 
+                {
+                    System.out.println("Invalid time format! Please enter in 12-hour format (e.g., 12:00 AM - 11:59 PM).\n");
+                }
+            }
+
+            System.out.print("\nEnter the event description: ");
+            String description = sc.nextLine();
+
+            Event event = new Event(time, description);
+            calendar.computeIfAbsent(day, k -> new ArrayList<>()).add(event);
+            calendar.get(day).sort(Comparator.comparing(Event::getTime));
+
+            System.out.print("\nWould you like to add another event? (Yes/No): ");
+            String response = sc.nextLine().toLowerCase();
+            addingEvents = response.equals("yes");
+        }
+
+        displayCalendar(month, year, calendar);
+
+        System.out.print("\nWould you like to save this calender? (Yes/No): ");
+
+        String saveToFile = sc.nextLine().toLowerCase();
+
+        if (saveToFile.equals("yes")) 
+        {
+            String filename = month + " " + year + " Calendar.txt";
+            saveCalendarToFile(month, year, calendar, filename);            
+            System.out.print("\nHave a good day!");
+        }  
+        else 
+        {
+            System.out.println("Okay, calendar not saved.");
+        }
+
+        sc.close();
     }
 }
 
